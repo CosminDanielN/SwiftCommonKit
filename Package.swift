@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "SwiftCommonKit",
     platforms: [
-        .iOS(.v26)
+        .iOS(.v17)
     ],
     products: [
         .library(
