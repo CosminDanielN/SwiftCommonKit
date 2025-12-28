@@ -5,29 +5,30 @@
 //  Created by Lens Team on 28.12.2025.
 //
 
-import XCTest
+import Testing
+import Foundation
 @testable import SwiftCommonKit
 
-final class NetworkTests: XCTestCase {
+@Suite("Network Tests", .serialized)
+class NetworkTests {
     
     var client: URLSessionNetworkClient!
     var session: URLSession!
     
-    override func setUp() async throws {
-        try await super.setUp()
+    init() async throws {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [MockURLProtocol.self]
         session = URLSession(configuration: config)
         client = URLSessionNetworkClient(baseURL: URL(string: "https://api.example.com")!, session: session)
     }
     
-    override func tearDown() async throws {
+    deinit {
         client = nil
         session = nil
         MockURLProtocol.requestHandler = nil
-        try await super.tearDown()
     }
     
+    @Test("Network Request: Success")
     func testRequest_success() async throws {
         let expectedData = TestData(id: 1, name: "Test")
         let endpoint = Endpoint(path: "/test")
@@ -43,9 +44,10 @@ final class NetworkTests: XCTestCase {
         }
         
         let result: TestData = try await client.request(endpoint)
-        XCTAssertEqual(result, expectedData)
+        #expect(result == expectedData)
     }
     
+    @Test("Network Request: Failure 404")
     func testRequest_failure_404() async {
         let endpoint = Endpoint(path: "/notfound")
         
@@ -56,14 +58,15 @@ final class NetworkTests: XCTestCase {
         
         do {
             let _: TestData = try await client.request(endpoint)
-            XCTFail("Should throw error")
+            Issue.record("Should throw error")
         } catch NetworkError.requestFailed(let statusCode) {
-            XCTAssertEqual(statusCode, 404)
+            #expect(statusCode == 404)
         } catch {
-            XCTFail("Wrong error type: \(error)")
+            Issue.record("Wrong error type: \(error)")
         }
     }
     
+    @Test("Network Request: Decoding Error")
     func testRequest_decodingError() async {
         let endpoint = Endpoint(path: "/badData")
         
@@ -75,11 +78,11 @@ final class NetworkTests: XCTestCase {
         
         do {
             let _: TestData = try await client.request(endpoint)
-            XCTFail("Should throw error")
+            Issue.record("Should throw error")
         } catch NetworkError.decodingError {
             // Success
         } catch {
-            XCTFail("Wrong error type: \(error)")
+            Issue.record("Wrong error type: \(error)")
         }
     }
 }
@@ -99,7 +102,7 @@ class MockURLProtocol: URLProtocol {
     
     override func startLoading() {
         guard let handler = MockURLProtocol.requestHandler else {
-            XCTFail("Handler is unavailable.")
+            Issue.record("Handler is unavailable.")
             return
         }
         

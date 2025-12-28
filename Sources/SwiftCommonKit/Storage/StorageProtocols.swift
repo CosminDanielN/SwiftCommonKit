@@ -57,3 +57,8 @@ public protocol FileStorage: Sendable {
     /// Removes an item from disk.
     func remove(name: String) async throws
 }
+
+
+// ModelStorage protocol removed due to concurrency constraints with SwiftData actors.
+// Use DBStorage.perform for safe context access.
+

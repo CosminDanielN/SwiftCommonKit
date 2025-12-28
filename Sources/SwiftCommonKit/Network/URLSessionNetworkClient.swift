@@ -39,12 +39,16 @@ public final class URLSessionNetworkClient: NetworkClient {
             }
             
             return try decoder.decode(T.self, from: data)
-        } catch let error as NetworkError {
-            throw error
-        } catch let error as DecodingError {
-            print("Decoding Error: \(error)")
-            throw NetworkError.decodingError
         } catch {
+            if let networkError = error as? NetworkError {
+                throw networkError
+            }
+            
+            if let decodingError = error as? DecodingError {
+                print("Decoding Error: \(decodingError)")
+                throw NetworkError.decodingError
+            }
+            
             throw NetworkError.unknown(error)
         }
     }
